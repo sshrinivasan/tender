@@ -4,6 +4,7 @@ import pandas as pd
 import os
 from langchain_core.documents import Document
 from utils.date_utils import parse_closing_date_ts
+from utils.region_utils import normalize_canadabuys_region
 
 
 
@@ -55,6 +56,7 @@ def build_canadabuys_documents():
                     "closing_date": row["tenderClosingDate-appelOffresDateCloture"],
                     "closing_date_ts": parse_closing_date_ts(str(row["tenderClosingDate-appelOffresDateCloture"])),
                     "region": row["regionsOfOpportunity-regionAppelOffres-eng"],
+                    "region_canonical": normalize_canadabuys_region(str(row["regionsOfOpportunity-regionAppelOffres-eng"])),
                     "source_id": str(i),
                     "chunk_index": chunk_idx,
                     "source": "canadabuys"

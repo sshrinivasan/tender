@@ -56,7 +56,7 @@ def populate_vector_db(vector_store, documents):
                             print(f"[error] Failed to add re-chunked pieces for {did}: {final_e}. Skipping.")
 
 
-def get_retriever(vector_store, source_filter=None, closing_days=None):
+def get_retriever(vector_store, source_filter=None, closing_days=None, regions=None):
     """
     Create a retriever from the vector store to retrieve search data.
 
@@ -64,9 +64,10 @@ def get_retriever(vector_store, source_filter=None, closing_days=None):
         vector_store: The Chroma vector store instance
         source_filter: Optional list of source names to filter by (e.g., ['canadabuys', 'merx'])
         closing_days: Optional int — restrict results to tenders closing within this many days
+        regions: Optional list of canonical region names to filter by (e.g., ['Ontario', 'NCR'])
 
     Returns:
-        A retriever configured with k=10 and optional source/date filtering
+        A retriever configured with k=10 and optional source/date/region filtering
     """
     search_kwargs = {"k": 10}
 
@@ -86,6 +87,9 @@ def get_retriever(vector_store, source_filter=None, closing_days=None):
     if closing_days:
         cutoff_ts = now_ts + closing_days * 86400
         conditions.append({"closing_date_ts": {"$lte": cutoff_ts}})
+
+    if regions:
+        conditions.append({"region_canonical": {"$in": regions}})
 
     search_kwargs["filter"] = {"$and": conditions} if len(conditions) > 1 else conditions[0]
 
