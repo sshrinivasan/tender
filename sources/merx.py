@@ -1,6 +1,7 @@
 import json
 import os
 from langchain_core.documents import Document
+from utils.date_utils import parse_closing_date_ts
 
 
 def build_merx_documents():
@@ -47,6 +48,7 @@ def build_merx_documents():
                     "title": title,
                     "buyer": tender.get('buyer', ''),
                     "closing_date": tender.get('closing_date', ''),
+                    "closing_date_ts": parse_closing_date_ts(tender.get('closing_date', '')),
                     "region": tender.get('region', ''),
                     "published_date": tender.get('published_date', ''),
                     "solicitation_id": tender.get('solicitation_id', ''),

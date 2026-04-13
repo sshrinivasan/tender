@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
@@ -55,23 +56,38 @@ def populate_vector_db(vector_store, documents):
                             print(f"[error] Failed to add re-chunked pieces for {did}: {final_e}. Skipping.")
 
 
-def get_retriever(vector_store, source_filter=None):
+def get_retriever(vector_store, source_filter=None, closing_days=None):
     """
     Create a retriever from the vector store to retrieve search data.
 
     Args:
         vector_store: The Chroma vector store instance
         source_filter: Optional list of source names to filter by (e.g., ['canadabuys', 'merx'])
+        closing_days: Optional int — restrict results to tenders closing within this many days
 
     Returns:
-        A retriever configured with k=5 and optional source filtering
+        A retriever configured with k=10 and optional source/date filtering
     """
-    search_kwargs = {"k": 5}
+    search_kwargs = {"k": 10}
 
-    # Add metadata filter if source_filter is provided
+    conditions = []
+
     if source_filter:
-        # Chroma filter format: {"source": {"$in": ["canadabuys", "merx"]}}
-        search_kwargs["filter"] = {"source": {"$in": source_filter}}
+        conditions.append({"source": {"$in": source_filter}})
+
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+
+    # Exclude expired tenders; keep docs with unparseable dates (ts == 0)
+    conditions.append({"$or": [
+        {"closing_date_ts": {"$eq": 0}},
+        {"closing_date_ts": {"$gte": now_ts}},
+    ]})
+
+    if closing_days:
+        cutoff_ts = now_ts + closing_days * 86400
+        conditions.append({"closing_date_ts": {"$lte": cutoff_ts}})
+
+    search_kwargs["filter"] = {"$and": conditions} if len(conditions) > 1 else conditions[0]
 
     retriever = vector_store.as_retriever(search_kwargs=search_kwargs)
     return retriever
