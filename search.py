@@ -30,6 +30,9 @@ def _extract_tender(doc) -> dict:
     if source == "merx":
         org = m.get("buyer", "")
         url = m.get("page_url", "")
+    elif source == "procuredata":
+        org = m.get("organization", "")
+        url = m.get("url", "")
     else:
         org = m.get("organization", "")
         urls = m.get("urls", "")
@@ -47,7 +50,7 @@ def _extract_tender(doc) -> dict:
 
 
 def run_search(query: str, source: str = "both", closing_days: int | None = None, regions: list[str] | None = None) -> dict:
-    source_filter = ["merx", "canadabuys"] if source == "both" else [source]
+    source_filter = ["merx", "canadabuys", "procuredata"] if source == "all" else [source]
 
     vector_store = initialize_vector_store("all_tenders", embeddings, DB_LOCATION)
     retriever = get_retriever(vector_store, source_filter=source_filter, closing_days=closing_days, regions=regions or None)

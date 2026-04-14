@@ -41,8 +41,8 @@ def main():
     parser.add_argument("query", help="What kind of tenders to search for")
     parser.add_argument("--date", type=int, choices=[7, 30], metavar="{7,30}",
                         help="Only return tenders closing within this many days")
-    parser.add_argument("--source", choices=["merx", "canadabuys", "both"], default="both",
-                        help="Which source(s) to search (default: both)")
+    parser.add_argument("--source", choices=["merx", "canadabuys", "procuredata", "all"], default="all",
+                        help="Which source(s) to search (default: all)")
     args = parser.parse_args()
 
     if not os.path.exists(DB_LOCATION):
@@ -50,10 +50,12 @@ def main():
         print("Please run build_vector_db.py first.")
         return
 
-    source_filter = ["merx", "canadabuys"] if args.source == "both" else [args.source]
+    source_filter = ["merx", "canadabuys", "procuredata"] if args.source == "all" else [args.source]
 
     vector_store = initialize_vector_store("all_tenders", embeddings, DB_LOCATION)
-    retriever = get_retriever(vector_store, source_filter=source_filter, closing_days=args.date)
+    retriever = get_retriever(vector_store, 
+                              source_filter=source_filter, 
+                              closing_days=args.date)
 
     retrieved_tenders = retriever.invoke(args.query)
     if not retrieved_tenders:

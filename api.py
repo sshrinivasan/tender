@@ -16,7 +16,7 @@ app.add_middleware(
 
 class SearchRequest(BaseModel):
     query: str
-    source: str = "both"              # "merx" | "canadabuys" | "both"
+    source: str = "all"               # "merx" | "canadabuys" | "procuredata" | "all"
     closing_days: int | None = None   # 7 | 30 | None
     regions: list[str] | None = None  # e.g. ["Ontario", "NCR"]
 
