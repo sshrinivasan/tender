@@ -1,23 +1,15 @@
+import argparse
+import os
 from langchain_ollama.llms import OllamaLLM
+from langchain_ollama import OllamaEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from vector import initialize_vector_store, get_retriever
-import os
-from langchain_ollama import OllamaEmbeddings
 
-# Determine which source(s) to search
-CANADABUYS = False
-MERX = True
-
-# Vector DB location
 DB_LOCATION = "./chroma_langchain_db"
 
-# Model
 model = OllamaLLM(model="llama3.2", options={"num_ctx": 8192})
-
-# Embedding model
 embeddings = OllamaEmbeddings(model="mxbai-embed-large")
 
-# Prompt template
 template = """
 You are a helpful assistant that finds relevant tenders based on the users query, and summarizes them for the user in a readable way.
 Here is the user query that you will be searching for:{user_query}
@@ -43,57 +35,36 @@ Example 2:
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | model
 
+
 def main():
-    # Check if database exists
+    parser = argparse.ArgumentParser(description="Search Canadian government tenders using natural language.")
+    parser.add_argument("query", help="What kind of tenders to search for")
+    parser.add_argument("--date", type=int, choices=[7, 30], metavar="{7,30}",
+                        help="Only return tenders closing within this many days")
+    parser.add_argument("--source", choices=["merx", "canadabuys", "procuredata", "all"], default="all",
+                        help="Which source(s) to search (default: all)")
+    args = parser.parse_args()
+
     if not os.path.exists(DB_LOCATION):
         print(f"Error: Vector database not found at {DB_LOCATION}")
-        print("Please run build_vector_db.py first to create the database.")
+        print("Please run build_vector_db.py first.")
         return
 
-    print("=== Tender Search ===")
+    source_filter = ["merx", "canadabuys", "procuredata"] if args.source == "all" else [args.source]
 
-    # Initialize vector store
     vector_store = initialize_vector_store("all_tenders", embeddings, DB_LOCATION)
+    retriever = get_retriever(vector_store, 
+                              source_filter=source_filter, 
+                              closing_days=args.date)
 
-    # Build filter based on enabled sources
-    enabled_sources = []
-    if CANADABUYS:
-        enabled_sources.append("canadabuys")
-    if MERX:
-        enabled_sources.append("merx")
-
-    if not enabled_sources:
-        print("Error: No sources are enabled (both CANADABUYS and MERX are False)")
-        print("Please set at least one source to True in the script.")
+    retrieved_tenders = retriever.invoke(args.query)
+    if not retrieved_tenders:
+        print("No relevant tenders found.")
         return
 
-    print(f"Searching sources: {', '.join(enabled_sources)}")
-    print("Type 'exit' or 'quit' to exit.\n")
+    result = chain.invoke({"user_query": args.query, "new_tenders": retrieved_tenders})
+    print(result)
 
-    # User input loop
-    while True:
-        query = input("What kind of tenders are you looking for? ")
-        if query.lower() in ["exit", "quit"]:
-            print("Exiting the program.")
-            break
-
-        # Get the retriever with source filtering
-        retriever = get_retriever(vector_store, source_filter=enabled_sources)
-
-        # Retrieve relevant tenders
-        retrieved_tenders = retriever.invoke(query)
-
-        if not retrieved_tenders:
-            print("No relevant tenders found for your query.\n")
-            continue
-
-        # Generate response
-        result = chain.invoke({
-            "user_query": query,
-            "new_tenders": retrieved_tenders
-        })
-
-        print(f"\n{result}\n")
 
 if __name__ == "__main__":
     main()

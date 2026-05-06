@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tender Search</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0f0f1a;
+      --red: #e63946;
+      --red-dark: #c1121f;
+      --surface: #f7f8fa;
+      --card: #ffffff;
+      --border: #e4e7ec;
+      --muted: #6b7280;
+      --merx-bg: #fef9ec;
+      --merx-fg: #92400e;
+      --cb-bg: #edfaf3;
+      --cb-fg: #166534;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+      background: var(--surface);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(15, 15, 26, 0.96);
+      backdrop-filter: blur(10px);
+      padding: 0 40px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-logo em {
+      color: var(--red);
+      font-style: normal;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(160deg, #0f0f1a 0%, #1c1c35 60%, #12202e 100%);
+      padding: 140px 40px 80px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--red);
+      background: rgba(230, 57, 70, 0.12);
+      border: 1px solid rgba(230, 57, 70, 0.25);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span { color: var(--red); }
+
+    .hero p {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.5);
+      max-width: 480px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    /* ── Search bar ── */
+    .search-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-radius: 14px;
+      padding: 6px 6px 6px 20px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 20px 60px rgba(0,0,0,0.4);
+      gap: 10px;
+    }
+
+    .search-icon {
+      color: var(--muted);
+      flex-shrink: 0;
+      font-size: 1.1rem;
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      color: var(--ink);
+      background: transparent;
+      padding: 8px 0;
+    }
+
+    .search-bar input::placeholder { color: #b0b7c3; }
+
+    .search-bar button {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 26px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .search-bar button:hover { background: var(--red-dark); }
+
+    .search-hints {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hint-chip {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 4px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .hint-chip:hover { color: #fff; border-color: rgba(255,255,255,0.35); }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .stat {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .stat-num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+    }
+
+    /* ── Body layout ── */
+    .body {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 40px 60px;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 32px;
+    }
+
+    /* ── Sidebar ── */
+    aside { display: flex; flex-direction: column; gap: 28px; }
+
+    .filter-group h4 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #374151;
+      margin-bottom: 9px;
+      cursor: pointer;
+    }
+
+    .filter-option label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .filter-option input[type="checkbox"] { accent-color: var(--red); }
+
+    .filter-count {
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: var(--surface);
+      padding: 1px 7px;
+      border-radius: 999px;
+    }
+
+    /* ── Results ── */
+    .results-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .results-bar p { font-size: 0.88rem; color: var(--muted); }
+    .results-bar p strong { color: var(--ink); }
+
+    .sort-select {
+      font-size: 0.83rem;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    /* ── AI summary ── */
+    .ai-card {
+      background: linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%);
+      border: 1px solid #c7d2fe;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .ai-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    .ai-card p {
+      font-size: 0.86rem;
+      color: #3730a3;
+      line-height: 1.65;
+      padding-top: 4px;
+    }
+
+    /* ── Tender card ── */
+    .tender-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 26px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: box-shadow 0.18s, border-color 0.18s;
+    }
+
+    .tender-card:hover {
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      border-color: #c8d0db;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-header h2 {
+      font-size: 0.95rem;
+      font-weight: 650;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    .source-pill {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .source-pill.merx        { background: var(--merx-bg); color: var(--merx-fg); }
+    .source-pill.canadabuys  { background: var(--cb-bg);   color: var(--cb-fg);   }
+
+    .card-meta {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .meta strong { color: #374151; font-weight: 500; }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: #4b5563;
+      line-height: 1.65;
+      margin-bottom: 16px;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .closing-soon {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #b45309;
+      background: #fef3c7;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .btn-view {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--red);
+      border: 1.5px solid var(--red);
+      background: transparent;
+      padding: 6px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-view:hover { background: var(--red); color: #fff; }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 32px;
+    }
+
+    .pg {
+      min-width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      font-size: 0.85rem;
+      color: #374151;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+      transition: background 0.12s;
+    }
+
+    .pg:hover { background: var(--surface); }
+    .pg.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-logo">tender<em>.</em></div>
+    <ul class="nav-links">
+      <li><a href="#">Search</a></li>
+      <li><a href="#">Sources</a></li>
+      <li><a href="#">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">✦ AI-powered tender discovery</div>
+    <h1>Find Canadian government<br/><span>tenders that match</span> your work</h1>
+    <p>Search across MERX, CanadaBuys, and more — summarized by AI so you can act fast.</p>
+
+    <div class="search-wrap">
+      <div class="search-bar">
+        <span class="search-icon">&#128269;</span>
+        <input type="text" placeholder="Describe the kind of work you're looking for…" value="cloud infrastructure services" />
+        <button>Search</button>
+      </div>
+      <div class="search-hints">
+        <span class="hint-chip">IT consulting</span>
+        <span class="hint-chip">Construction Ontario</span>
+        <span class="hint-chip">Cybersecurity federal</span>
+        <span class="hint-chip">Translation services</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat">
+      <span class="stat-num">14,302</span>
+      <span class="stat-label">active tenders</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-num">2</span>
+      <span class="stat-label">sources indexed</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-num">Updated daily</span>
+      <span class="stat-label"></span>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- Sidebar -->
+    <aside>
+      <div class="filter-group">
+        <h4>Source</h4>
+        <div class="filter-option">
+          <label><input type="checkbox" checked /> MERX</label>
+          <span class="filter-count">28</span>
+        </div>
+        <div class="filter-option">
+          <label><input type="checkbox" checked /> CanadaBuys</label>
+          <span class="filter-count">14</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <h4>Region</h4>
+        <div class="filter-option">
+          <label><input type="checkbox" checked /> National</label>
+          <span class="filter-count">19</span>
+        </div>
+        <div class="filter-option">
+          <label><input type="checkbox" checked /> Ontario</label>
+          <span class="filter-count">11</span>
+        </div>
+        <div class="filter-option">
+          <label><input type="checkbox" /> Quebec</label>
+          <span class="filter-count">7</span>
+        </div>
+        <div class="filter-option">
+          <label><input type="checkbox" /> British Columbia</label>
+          <span class="filter-count">5</span>
+        </div>
+        <div class="filter-option">
+          <label><input type="checkbox" /> Alberta</label>
+          <span class="filter-count">4</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <h4>Closing</h4>
+        <div class="filter-option">
+          <label><input type="checkbox" /> Next 7 days</label>
+          <span class="filter-count">6</span>
+        </div>
+        <div class="filter-option">
+          <label><input type="checkbox" /> Next 30 days</label>
+          <span class="filter-count">24</span>
+        </div>
+        <div class="filter-option">
+          <label><input type="checkbox" checked /> Any</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <h4>Other</h4>
+        <div class="filter-option">
+          <label><input type="checkbox" /> Mandatory pre-bid</label>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Results -->
+    <section>
+      <div class="results-bar">
+        <p><strong>42 results</strong> for "cloud infrastructure services"</p>
+        <select class="sort-select">
+          <option>Most relevant</option>
+          <option>Closing soonest</option>
+          <option>Recently published</option>
+        </select>
+      </div>
+
+      <!-- AI Summary -->
+      <div class="ai-card">
+        <div class="ai-dot">✦</div>
+        <p>Found 42 tenders related to cloud infrastructure services. Most are from federal departments (PSPC, SSC, DND) and involve managed hosting, migration services, or DevSecOps support. 6 are closing within the next 14 days.</p>
+      </div>
+
+      <!-- Card 1 -->
+      <div class="tender-card">
+        <div class="card-header">
+          <h2>Cloud Infrastructure and Managed Services — Enterprise Hosting</h2>
+          <span class="source-pill merx">MERX</span>
+        </div>
+        <div class="card-meta">
+          <span class="meta">Org: <strong>Shared Services Canada</strong></span>
+          <span class="meta">Closes: <strong>May 12, 2026</strong></span>
+          <span class="meta">Region: <strong>National</strong></span>
+        </div>
+        <p class="card-desc">Shared Services Canada is seeking vendors to provide managed cloud hosting, including IaaS and PaaS services for Government of Canada workloads. Includes migration support and ongoing operations.</p>
+        <div class="card-footer">
+          <span class="closing-soon">Closing in 9 days</span>
+          <button class="btn-view">View tender</button>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="tender-card">
+        <div class="card-header">
+          <h2>DevSecOps Platform Support and Cloud Operations</h2>
+          <span class="source-pill canadabuys">CanadaBuys</span>
+        </div>
+        <div class="card-meta">
+          <span class="meta">Org: <strong>Department of National Defence</strong></span>
+          <span class="meta">Closes: <strong>May 6, 2026</strong></span>
+          <span class="meta">Region: <strong>Ontario</strong></span>
+        </div>
+        <p class="card-desc">The Department of National Defence requires professional services to support DevSecOps pipelines hosted in a hybrid cloud environment, including CI/CD tooling, security hardening, and platform reliability.</p>
+        <div class="card-footer">
+          <span class="closing-soon">Closing in 3 days</span>
+          <button class="btn-view">View tender</button>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="tender-card">
+        <div class="card-header">
+          <h2>Cloud Migration Advisory Services — Legacy System Modernization</h2>
+          <span class="source-pill canadabuys">CanadaBuys</span>
+        </div>
+        <div class="card-meta">
+          <span class="meta">Org: <strong>Public Services and Procurement Canada</strong></span>
+          <span class="meta">Closes: <strong>May 20, 2026</strong></span>
+          <span class="meta">Region: <strong>National</strong></span>
+        </div>
+        <p class="card-desc">PSPC is seeking advisory services to assess and plan the migration of legacy on-premises systems to cloud platforms, including vendor evaluation, risk analysis, and roadmap development.</p>
+        <div class="card-footer">
+          <div></div>
+          <button class="btn-view">View tender</button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <div class="pg">‹</div>
+        <div class="pg active">1</div>
+        <div class="pg">2</div>
+        <div class="pg">3</div>
+        <div class="pg">…</div>
+        <div class="pg">9</div>
+        <div class="pg">›</div>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>
