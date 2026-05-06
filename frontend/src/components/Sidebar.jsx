@@ -38,7 +38,7 @@ export default function Sidebar({ filters, onChange }) {
     <aside>
       <div className="filter-group">
         <h4>Source</h4>
-        {[['all', 'All'], ['merx', 'MERX'], ['canadabuys', 'CanadaBuys'], ['procuredata', 'ProcureData']].map(([val, label]) => (
+        {[['all', 'All'], ['merx', 'MERX'], ['canadabuys', 'CanadaBuys'], ['procuredata', 'ProcureData'], ['bidsandtenders', 'Bids & Tenders']].map(([val, label]) => (
           <div className="filter-option" key={val}>
             <label>
               <input

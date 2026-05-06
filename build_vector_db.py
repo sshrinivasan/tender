@@ -2,13 +2,15 @@ from vector import initialize_vector_store, populate_vector_db
 from sources.canadabuys import build_canadabuys_documents
 from sources.merx import build_merx_documents
 from sources.procuredata import build_procuredata_documents
+from sources.bidsandtenders import build_bidsandtenders_documents
 import os
 from langchain_ollama import OllamaEmbeddings
 
 # Determine which source(s) to add
 CANADABUYS = True
 MERX = True
-PROCUREDATA = True    # set False to skip ProcureData API tenders
+PROCUREDATA = True
+BIDSANDTENDERS = True
 
 # Vector DB location
 DB_LOCATION = "./chroma_langchain_db"
@@ -56,6 +58,8 @@ def main():
         sources_to_add.append('merx')
     if PROCUREDATA and 'procuredata' not in existing_sources:
         sources_to_add.append('procuredata')
+    if BIDSANDTENDERS and 'bidsandtenders' not in existing_sources:
+        sources_to_add.append('bidsandtenders')
 
     if not sources_to_add:
         print("\nAll requested sources already exist in the database.")
@@ -87,6 +91,14 @@ def main():
         print(f"Built {len(procuredata_documents)} ProcureData document chunks")
         populate_vector_db(vector_store, procuredata_documents)
         print("ProcureData documents added successfully")
+
+    # Add BidsAndTenders documents
+    if 'bidsandtenders' in sources_to_add:
+        print("\n--- Adding BidsAndTenders documents ---")
+        bt_documents = build_bidsandtenders_documents()
+        print(f"Built {len(bt_documents)} BidsAndTenders document chunks")
+        populate_vector_db(vector_store, bt_documents)
+        print("BidsAndTenders documents added successfully")
 
     # Final summary
     existing_sources = get_existing_sources(vector_store)

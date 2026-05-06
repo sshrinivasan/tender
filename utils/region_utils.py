@@ -174,3 +174,75 @@ def normalize_canadabuys_region(region_str: str) -> str:
     if not region_str:
         return "Unknown"
     return _CB_MAP.get(region_str.strip().lower(), "Unknown")
+
+
+# ── BidsAndTenders ────────────────────────────────────────────────────────────
+
+# Province/territory keyword → canonical region (checked in order; longer matches first)
+_BT_KEYWORDS: list[tuple[str, str]] = [
+    # Territories first to avoid "northwest" matching something else
+    ("northwest territories", "Northwest Territories"),
+    ("prince edward island", "Prince Edward Island"),
+    ("newfoundland and labrador", "Newfoundland"),
+    ("newfoundland", "Newfoundland"),
+    ("british columbia", "British Columbia"),
+    ("new brunswick", "New Brunswick"),
+    ("nova scotia", "Nova Scotia"),
+    ("saskatchewan", "Saskatchewan"),
+    ("manitoba", "Manitoba"),
+    ("nunavut", "Nunavut"),
+    ("alberta", "Alberta"),
+    ("ontario", "Ontario"),
+    ("quebec", "Quebec"),
+    ("yukon", "Yukon"),
+    # NCR cities
+    ("ottawa", "NCR"),
+    ("gatineau", "NCR"),
+    # Major city → province fallbacks
+    ("toronto", "Ontario"),
+    ("hamilton", "Ontario"),
+    ("london", "Ontario"),
+    ("kitchener", "Ontario"),
+    ("waterloo", "Ontario"),
+    ("brampton", "Ontario"),
+    ("mississauga", "Ontario"),
+    ("markham", "Ontario"),
+    ("windsor", "Ontario"),
+    ("sudbury", "Ontario"),
+    ("thunder bay", "Ontario"),
+    ("kingston", "Ontario"),
+    ("barrie", "Ontario"),
+    ("guelph", "Ontario"),
+    ("montreal", "Quebec"),
+    ("montréal", "Quebec"),
+    ("laval", "Quebec"),
+    ("longueuil", "Quebec"),
+    ("calgary", "Alberta"),
+    ("edmonton", "Alberta"),
+    ("vancouver", "British Columbia"),
+    ("surrey", "British Columbia"),
+    ("burnaby", "British Columbia"),
+    ("richmond", "British Columbia"),
+    ("kelowna", "British Columbia"),
+    ("victoria", "British Columbia"),
+    ("winnipeg", "Manitoba"),
+    ("saskatoon", "Saskatchewan"),
+    ("regina", "Saskatchewan"),
+    ("halifax", "Nova Scotia"),
+    ("moncton", "New Brunswick"),
+    ("fredericton", "New Brunswick"),
+    ("saint john", "New Brunswick"),
+    ("charlottetown", "Prince Edward Island"),
+    ("whitehorse", "Yukon"),
+    ("yellowknife", "Northwest Territories"),
+    ("iqaluit", "Nunavut"),
+]
+
+
+def normalize_bidsandtenders_region(org_name: str, bid_name: str = "") -> str:
+    """Infer canonical region from organization name and/or bid title."""
+    combined = (org_name + " " + bid_name).lower()
+    for keyword, canonical in _BT_KEYWORDS:
+        if keyword in combined:
+            return canonical
+    return "Unknown"

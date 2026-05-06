@@ -4,6 +4,7 @@ import Hero from './components/Hero'
 import Sidebar from './components/Sidebar'
 import AISummary from './components/AISummary'
 import TenderCard from './components/TenderCard'
+import TenderDetailModal from './components/TenderDetailModal'
 
 const DEFAULT_FILTERS = { source: 'all', closing_days: null, regions: [] }
 
@@ -13,6 +14,7 @@ export default function App() {
   const [results, setResults] = useState(null)   // { summary, tenders }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [detailTender, setDetailTender] = useState(null)
 
   async function handleSearch() {
     const q = query.trim()
@@ -68,8 +70,8 @@ export default function App() {
         </div>
         <div className="stat-divider" />
         <div className="stat">
-          <span className="stat-num">2</span>
-          <span className="stat-label">sources indexed</span>
+          <span className="stat-num">{filters.source === 'all' ? 4 : 1}</span>
+          <span className="stat-label">source{filters.source === 'all' ? 's' : ''} indexed</span>
         </div>
         <div className="stat-divider" />
         <div className="stat">
@@ -113,7 +115,7 @@ export default function App() {
 
               {hasResults ? (
                 tenders.map((tender, i) => (
-                  <TenderCard key={`${tender.title}-${i}`} tender={tender} />
+                  <TenderCard key={`${tender.title}-${i}`} tender={tender} onDetail={setDetailTender} />
                 ))
               ) : (
                 <div className="empty-state">No tenders matched your query.</div>
@@ -122,6 +124,9 @@ export default function App() {
           )}
         </section>
       </div>
+      {detailTender && (
+        <TenderDetailModal tender={detailTender} onClose={() => setDetailTender(null)} />
+      )}
     </>
   )
 }

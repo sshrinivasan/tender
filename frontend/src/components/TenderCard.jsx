@@ -1,6 +1,6 @@
 const SEVEN_DAYS = 7 * 24 * 60 * 60
 
-export default function TenderCard({ tender }) {
+export default function TenderCard({ tender, onDetail }) {
   const nowTs = Math.floor(Date.now() / 1000)
   const isClosingSoon =
     tender.closing_date_ts > 0 &&
@@ -16,7 +16,7 @@ export default function TenderCard({ tender }) {
       <div className="card-header">
         <h2>{tender.title || 'Untitled Tender'}</h2>
         <span className={`source-pill ${tender.source}`}>
-          {{ canadabuys: 'CanadaBuys', merx: 'MERX', procuredata: 'ProcureData' }[tender.source] ?? tender.source}
+          {{ canadabuys: 'CanadaBuys', merx: 'MERX', procuredata: 'ProcureData', bidsandtenders: 'Bids & Tenders' }[tender.source] ?? tender.source}
         </span>
       </div>
 
@@ -40,13 +40,20 @@ export default function TenderCard({ tender }) {
         ) : (
           <div />
         )}
-        {tender.url ? (
-          <a className="btn-view" href={tender.url} target="_blank" rel="noreferrer">
-            View tender
-          </a>
-        ) : (
-          <span className="btn-view disabled">View tender</span>
-        )}
+        <div className="card-actions">
+          {tender.url && (
+            <button className="btn-detail" onClick={() => onDetail(tender)}>
+              Quick summary
+            </button>
+          )}
+          {tender.url ? (
+            <a className="btn-view" href={tender.url} target="_blank" rel="noreferrer">
+              View tender
+            </a>
+          ) : (
+            <span className="btn-view disabled">View tender</span>
+          )}
+        </div>
       </div>
     </div>
   )
